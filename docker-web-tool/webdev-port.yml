@@ -1,0 +1,96 @@
+# Author: Yukal Alexander <yukal@email.ua>
+# Version: 1.0
+# License: MIT
+
+version: '3.3'
+
+services:
+  mariadb:
+    container_name: webdev_db
+    image: mariadb
+    restart: always
+    #user: '1000:985'
+    networks:
+      - network
+    expose:
+      - '3306'
+    environment:
+      - 'MYSQL_ROOT_HOST=%'
+      - 'MYSQL_ROOT_PASSWORD=pass'
+      - 'MYSQL_DATABASE=db'
+      - 'MYSQL_USER=user'
+      - 'MYSQL_PASSWORD=pass'
+      - 'MYSQL_ALLOW_EMPTY_PASSWORD=no'
+    volumes:
+      - ./app/database:/var/lib/mysql
+
+  php:
+    container_name: webdev_php
+    build:
+      context: .
+      dockerfile: ./app/conf/php.dockerfile
+    image: php:webdev
+    working_dir: /website
+    volumes:
+      - ./app/www:/website
+      - ./app/conf/php.ini:/usr/local/etc/php/conf.d/40-custom.ini:ro
+      - ./app/conf/php-port.conf:/usr/local/etc/php-fpm.d/zz-docker.conf:ro
+    networks:
+      - network
+    # external_links:
+    #   - webdev_db:db
+    command: ['php-fpm']
+    depends_on:
+      - mariadb
+
+  nginx:
+    container_name: webdev_nginx
+    image: nginx
+    working_dir: /website
+    volumes:
+      - ./app/www:/website
+      - ./app/logs:/var/log/nginx
+      - ./app/conf/nginx-port.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - network
+    ports:
+      - 8000:80
+    # external_links:
+    #   - webdev_php:php
+    command: [nginx, '-g', 'daemon off;']
+    depends_on:
+      - php
+
+  phpmyadmin:
+    container_name: webdev_pma
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: mariadb
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: pass
+    networks:
+      - network
+    ports:
+      - 8001:80
+    # external_links:
+    #   - webdev_db:db
+    depends_on:
+      - mariadb
+      - php
+
+  # adminer:
+  #   container_name: webdev_adm
+  #   image: adminer
+  #   restart: always
+  #   ports:
+  #     - 8002:8080
+  #   networks:
+  #     - network
+  #   depends_on:
+  #     - mariadb
+
+networks:
+  network:
+    driver: bridge
+    external: false
