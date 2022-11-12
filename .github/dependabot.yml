@@ -10,6 +10,8 @@ updates:
       time: "04:00"
       # timezone: "Europe/Kyiv"
 
+    target-branch: "dev"
+
     commit-message:
       # Prefix all commit messages with "npm"
       prefix: "npm"
