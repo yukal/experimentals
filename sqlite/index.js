@@ -1,52 +1,28 @@
 'use strict';
 
-const sqlite = require('sqlite3');
-const DatabaseModelsMap = require('./Models');
+const Sqlite = require('sqlite3').verbose();
+const { map: DatabaseModels } = require('./Models');
 
-class SqliteDatabase {
-  connection;
-  filename;
-
-  static from(databaseFile) {
-    return new SqliteDatabase(databaseFile);
-  }
-
-  constructor(databaseFile) {
-    this.filename = databaseFile;
-
-    return new Proxy(this, {
-      get(self, name, receiver) {
-        if (DatabaseModelsMap.has(name)) {
-          const DatabaseModel = DatabaseModelsMap.get(name);
-
-          Reflect.defineProperty(self, name, {
-            value: new DatabaseModel(self.connection),
-            enumerable: true,
-          });
-        }
-
-        return Reflect.has(self, name)
-          ? Reflect.get(self, name, receiver)
-          : undefined;
-      },
-    });
-  }
-
-  getConnection() {
-    return new Promise((resolve, reject) => {
-      const connection = new sqlite.Database(this.filename, sqlite.OPEN_READWRITE, (error) => {
-        error !== null ? reject(error) : resolve(this.connection = connection);
+const fromDatabaseFile = ({ filename }) => ({
+  getConnection: async () => {
+    const connection = await new Promise((resolve, reject) => {
+      const _connection = new Sqlite.Database(filename, Sqlite.OPEN_READWRITE, (error) => {
+        error !== null ? reject(error) : resolve(_connection);
       });
     });
-  }
 
-  closeConnection() {
-    return new Promise((resolve, reject) => {
-      this.connection.close((error) => {
-        error !== null ? reject(error) : resolve(true);
-      });
-    });
-  }
-}
+    for (const [databaseName, DatabaseModel] of DatabaseModels) {
+      if (Reflect.has(connection, databaseName)) {
+        throw new Error(`connection has ${databaseName} entry already`);
+      }
 
-module.exports = SqliteDatabase;
+      connection[databaseName] = new DatabaseModel(connection);
+    }
+
+    return connection;
+  }
+});
+
+module.exports = {
+  from: fromDatabaseFile
+};

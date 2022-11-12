@@ -9,7 +9,7 @@ const AnnouncePhoneModel = require('./AnnouncePhoneModel');
 const Unions = require('../unions');
 const { STRUCT_HMAP, STRUCT_LIST, STRUCT_MAP, STRUCT_SET } = Unions.constants;
 
-class AnnouncementModel extends BasicModel {
+class AnnounceModel extends BasicModel {
   primaryKey = 'announce_id';
   tableRelatives = ['phones', 'medias'];
   tableFields = new Set([
@@ -157,6 +157,8 @@ const identifyRelatives = (existedRelatives, newData) => {
   const existedMedia = existedRelatives.get('media');
   const existedPhone = existedRelatives.get('phone');
 
+  // console.log('existedPhone', existedPhone);
+
   for (const image of newData.images) {
     if (existedMedia.has(image)) {
       existed.medias.push(existedMedia.get(image));
@@ -176,4 +178,4 @@ const identifyRelatives = (existedRelatives, newData) => {
   return { existed, toAdd };
 };
 
-module.exports = AnnouncementModel;
+module.exports = AnnounceModel;

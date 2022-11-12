@@ -9,10 +9,6 @@ class MediaModel extends BasicModel {
   // primaryKey = 'media_id';
   // tableRelatives = [];
 
-  tableFields = new Set([
-    'media_id',
-    'media_name',
-  ]);
 
   // ...
 }

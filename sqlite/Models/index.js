@@ -1,17 +1,32 @@
-'use strict';
-
 const BasicModel = require('../BasicModel');
 
-const AnnouncementModel = require('./AnnouncementModel');
+const AnnounceModel = require('./AnnounceModel');
 const MediaModel = require('./MediaModel');
 const PhoneModel = require('./PhoneModel');
 const TaskModel = require('./TaskModel');
 
-module.exports = new Map([
-  ['Basic', BasicModel],
+module.exports = ({
+  items: [
+    BasicModel,
+    AnnounceModel,
+    MediaModel,
+    PhoneModel,
+    TaskModel,
+  ],
 
-  ['Announcement', AnnouncementModel],
-  ['Media', MediaModel],
-  ['Phone', PhoneModel],
-  ['Task', TaskModel],
-]);
+  map: new Map([
+    ['BasicModel', BasicModel],
+    ['AnnounceModel', AnnounceModel],
+    ['MediaModel', MediaModel],
+    ['PhoneModel', PhoneModel],
+    ['TaskModel', TaskModel],
+  ]),
+
+  // map: new Map([
+  //   ['Basic', BasicModel],
+  //   ['Announcement', AnnounceModel],
+  //   ['Media', MediaModel],
+  //   ['Phone', PhoneModel],
+  //   ['Task', TaskModel],
+  // ]),
+});

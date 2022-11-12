@@ -4,24 +4,22 @@ class BasicModel {
   tableFields = new Set([]);
 
   constructor(connection) {
-    if (connection != undefined) {
-      this.connection = connection;
-    }
+    Reflect.defineProperty(this, 'connection', {
+      get: () => connection,
+    });
   }
 
-  /**
-   * Get table name from a constructor name of the model
-   * and represent it in a lower snake case format (SomeModel => some_model)
-   */
   get tableName() {
+    // const name = this.constructor.name.slice(0, -5);
     let name = this.constructor.name.replace(/Model$/i, '');
     name = name[0].toLowerCase() + name.slice(1);
     name = name.replace(/[A-Z]{1}/g, s => `_${s.toLowerCase()}`);
 
-    return `${name}`.toLowerCase();
+    return `${name}s`.toLowerCase();
   }
 
   get tableAliasName() {
+    // return this.constructor.name.slice(0, -5);
     return this.constructor.name.replace(/Model$/i, '');
   }
 
@@ -30,26 +28,16 @@ class BasicModel {
   }
 
   get primaryKey() {
+    // const name = this.constructor.name.slice(0, -5);
     const name = this.constructor.name.replace(/Model$/i, '');
     return `${name}_id`.toLowerCase();
   }
 
-  /**
-   * Check does the record exists in the Database
-   * @param {Number} id Id of the record
-   * @returns boolean
-   */
   async doesExist(id) {
     const row = await this.selectOne(id, [this.primaryKey]);
     return row == undefined ? false : row[this.primaryKey] == id;
   }
 
-  /**
-   * Select record by a specific ID in the Database
-   * @param {Number} id ID of the record
-   * @param {Array} fields A list of fields in table
-   * @returns object
-   */
   selectOne(id, fields) {
     const { tableName, primaryKey } = this;
 
@@ -63,11 +51,6 @@ class BasicModel {
     });
   }
 
-  /**
-   * Insert data to a Database and return the last inserted ID
-   * @param {Object} data 
-   * @returns number Last inserted ID
-   */
   insertOne(data) {
     const { primaryKey, tableName, tableFields } = this;
     const { [primaryKey]: pk, ...dataToInsert } = data;
@@ -86,7 +69,7 @@ class BasicModel {
     const params = [...valuesToInsert];
     valuesToInsert.fill('?');
 
-    const sql = `INSERT INTO "${tableName}" ("${fields}") VALUES(${valuesToInsert})`;
+    const sql = `INSERT INTO ${tableName} ("${fields}") VALUES(${valuesToInsert})`;
 
     return new Promise((resolve, reject) => {
       this.connection.run(sql, params, function (error) {
@@ -96,8 +79,9 @@ class BasicModel {
   }
 
   /**
-   * Explicitly insert data into a specific place by a primary key
-   * @param {Object} data 
+   * Insert record implicitly into a specific place using a primary key
+   *
+   * @param {object} data 
    * @returns Promise<number> last insert id
    */
   insertOneByPk(data) {
@@ -126,12 +110,6 @@ class BasicModel {
     });
   }
 
-  /**
-   * Inserts data step by step and receives each last inserted ID of the record
-   * @param {Array} fields The fields of a specific table
-   * @param {Array} values Values to be inserted into DataBase
-   * @returns Promise<IDs> ID list of the inserted records
-   */
   insertRowsRecursively(fields = [], values = []) {
     const { tableName, tableFields } = this;
 
@@ -150,47 +128,48 @@ class BasicModel {
 
     const sql = `INSERT INTO "${tableName}" ("${separatedFields}") VALUES (${paramsToInsert})`;
 
-    return new Promise((resolve) => {
-      const params = { sql, values, errors: [], IDs: [], n: 0 };
-      recursivelyInsertRows(this, params, (errors, IDs) => resolve(errors, IDs));
-    });
-  }
-
-  /**
-   * Insert rows per one request. It does not return the IDs list of the inserted rows
-   * @param {Array} fields The fields of a specific table
-   * @param {Array} values Values to be inserted into DataBase
-   * @returns Number The number of last insrted rows
-   */
-  insertRowsNatively(fields = [], values = []) {
-    const { tableName, tableFields } = this;
-
-    const fieldsToInsert = [];
-
-    for (const fieldName of fields) {
-      if (tableFields.has(fieldName)) {
-        fieldsToInsert.push(fieldName);
-      }
-    }
-
-    const paramsToInsert = '?,'.repeat(fieldsToInsert.length).slice(0, -1);
-    const separatedValues = `(${paramsToInsert}),`.repeat(values.length).slice(0, -1);
-    const separatedFields = fieldsToInsert.join('","');
-
-    const sql = `INSERT INTO "${tableName}" ("${separatedFields}") VALUES ${separatedValues}`;
-
     return new Promise((resolve, reject) => {
-      this.connection.run(sql, values, function (error) {
-        error !== null ? reject(error) : resolve(this.changes);
+      const params = { sql, values, IDs: [], n: 0 };
+
+      insertRowsBatch(this, params, (error, IDs) => {
+        error !== null ? reject(error) : resolve(IDs);
       });
     });
   }
 
-  /**
-   * Insert bonded relatives (useful for tables with junctions having a one to many or a many to many relations)
-   * @param {Object} options 
-   * @returns Number The number of last insrted rows
-   */
+  insertRowsNatively(fields = [], values = []) {
+    const { tableName, tableFields } = this;
+
+    return new Promise((resolve, reject) => {
+      const fieldsToInsert = [];
+
+      for (const fieldName of fields) {
+        if (tableFields.has(fieldName)) {
+          fieldsToInsert.push(fieldName);
+        }
+      }
+
+      const paramsToInsert = '?,'.repeat(fieldsToInsert.length).slice(0, -1);
+      const separatedValues = `(${paramsToInsert}),`.repeat(values.length).slice(0, -1);
+      const separatedFields = fieldsToInsert.join('","');
+
+      const sql = `INSERT INTO "${tableName}" ("${separatedFields}") VALUES ${separatedValues}`;
+
+      this.connection.run(sql, values, function (error) {
+        if (error !== null) {
+          reject(error);
+          return;
+        }
+
+        // get the last insert id
+        // console.log(`A row has been inserted with rowid ${this.lastID}`);
+
+        resolve(this);
+      });
+    });
+  }
+
+  // Insert bonded relatives
   insertBondedRelatives(options) {
     const { tableName, tableFields } = this;
 
@@ -215,15 +194,19 @@ class BasicModel {
   }
 }
 
-const recursivelyInsertRows = (ctx, params, callback) => {
-  const { sql, values, errors, IDs, n } = params;
+const insertRowsBatch = (ctx, params, callback) => {
+  const { sql, values, IDs, n } = params;
 
   if (n < values.length) {
     const value = values[n];
 
     ctx.connection.run(sql, value, function (error) {
       if (error !== null) {
-        errors.push(error);
+        console.log(error);
+        // console.log('DUMP:', sql, value);
+
+        // callback(error, null);
+        // return;
       }
 
       if (this.changes > 0) {
@@ -231,10 +214,10 @@ const recursivelyInsertRows = (ctx, params, callback) => {
       }
 
       params.n++;
-      recursivelyInsertRows(ctx, params, callback);
+      insertRowsBatch(ctx, params, callback);
     });
   } else {
-    callback(errors, IDs);
+    callback(null, IDs);
   }
 };
 
