@@ -1,0 +1,143 @@
+#!/usr/bin/sh
+
+# A web development tool based on bash using the Docker
+# Docker-webdev is a web development tool for localhost machine, 
+# based on a little bash script for a Linux Desktop or command 
+# line of Unix systems. It starts a few containers based on 
+# YAML configuration and the docker-compose.
+#
+# The purpose of that tool is facilitating daily start/stop 
+# the same processes of web development without clogging up 
+# the host machine with various files.
+#
+# Author: Yukal Alexander <yukal@email.ua>
+# Version: 1.0
+# License: MIT
+
+# The application name contains from a current filename
+APPNAME=$(basename -- "$0")
+APPICON="${APPNAME}.png"
+APPDESK="${APPNAME}.desktop"
+WORKDIR=~/work/webdev
+BINDIR=/usr/local/bin
+PIXDIR=/usr/share/pixmaps
+DSKDIR=/usr/share/applications
+PHPFPM=sock
+# PHPFPM=port
+
+MSG() { printf "\e[${1}m%s\e[0m" "$2"; }
+CONFIRM() {
+    printf '\e[1;37m%s\e[0m (y/n) ' "$1"
+    read -n 1 -rs
+    if [[ $REPLY =~ ^[Yy]$ ]]; 
+        then printf '\e[32m%s\e[0m\n' 'yes'; return 0
+        else printf '\e[31m%s\e[0m\n' 'no'; return 1
+    fi
+}
+
+read -r -d '' USAGE_HELP << EOM
+Usage: ${APPNAME} {up|down|import|conf|cdesk|idesk|rdesk}\n
+$ ${APPNAME} $(MSG 32 up) {port|socket}
+  $(MSG "2;37" "Builds, (re)creates, starts, and attaches to containers for a service.")
+  $(MSG "2;37" "Use second parameter to choose php-fpm method (socket as default).")\n
+$ ${APPNAME} $(MSG 32 down)
+  $(MSG "2;37" "Stops and removes containers, networks, volumes, and images created by up.")\n
+$ ${APPNAME} $(MSG 32 import) db_name /path/dump.sql
+  $(MSG "2;37" "Imports database from a dump file.")\n
+$ ${APPNAME} $(MSG 32 conf)
+  $(MSG "2;37" "Validates and view for the current yaml configuration.")\n
+$ ${APPNAME} $(MSG 32 idesk)
+  $(MSG "2;37" "Shows an information about the copied files into a desktop entry.")\n
+$ ${APPNAME} $(MSG 32 rdesk)
+  $(MSG "2;37" "Removes the copied files from the bin directory and desktop entry.")\n
+$ ${APPNAME} $(MSG 32 cdesk)
+  $(MSG "2;37" "Copies files below to a bin directory and desktop entry.")
+  $(MSG "2;37" "After that you can run/stop the docker services using your desktop entry.")\n
+  $(MSG 36 ${APPNAME})         => ${BINDIR}/$(MSG 36 ${APPNAME})
+  $(MSG 36 ${APPICON})     => ${PIXDIR}/$(MSG 36 ${APPICON})
+  $(MSG 36 ${APPDESK}) => ${DSKDIR}/$(MSG 36 ${APPDESK})\n\n
+EOM
+
+
+case $1 in
+
+up)
+    if [ -n "$2" ]; then PHPFPM="${2:0:4}"; fi
+    docker-compose -p $APPNAME -f $WORKDIR/$APPNAME-$PHPFPM.yml up
+    printf '\n\e[1;37m%s\e[m\n' 'Press any key to finish session'
+    read -n 1 -rs;
+    exit 0
+    ;;
+
+down)
+    if CONFIRM "Remove Database files?"; then
+        sudo chown -R ${USER}:users $WORKDIR/app/database
+        find $WORKDIR/app/database -mindepth 1 -maxdepth 1 -type d -print0 | xargs -0 -I {} rm -frv {}
+        find $WORKDIR/app/database -mindepth 1 -maxdepth 1 -type f -print0 | xargs -0 -I {} rm -frv {}
+    fi
+    docker-compose -p $APPNAME -f $WORKDIR/$APPNAME-$PHPFPM.yml down
+    docker image rm -f "php:${APPNAME}"
+    exit 0
+    ;;
+
+import)
+    if [[ $# < 3 ]]; then
+        echo -e $(MSG "7;31" " Missed parameters ")"\n"
+        exec "$0" -D FOREGROUND
+        exit 1
+    fi
+    if [[ -f "$3" && -r "$3" ]]; then
+        docker exec -i "${APPNAME}_db" mysql -uroot -ppass "$2" < "$3"
+        exit 0
+    else
+        echo -e $(MSG "31" "Wrong dump file: ")"$3\n"
+    fi
+    exit 1
+    ;;
+
+conf)
+    docker-compose -p $APPNAME -f $WORKDIR/$APPNAME-$PHPFPM.yml config
+    exit 0
+    ;;
+
+cdesk)
+    $0 rdesk
+    if [ ! -f "$BINDIR/$APPNAME" ]; then
+        sudo cp -uv "$PWD/$APPNAME" "$BINDIR/$APPNAME"
+        sudo chmod 755 "$BINDIR/$APPNAME"
+    fi
+    if [ ! -f "$PIXDIR/$APPICON" ]; then
+        sudo cp -uv "$PWD/$APPICON" "$PIXDIR/$APPICON"
+        sudo chmod 644 "$PIXDIR/$APPICON"
+    fi
+    if [ ! -f "$DSKDIR/$APPDESK" ]; then
+        sudo cp -uv "$PWD/$APPDESK" "$DSKDIR/$APPDESK"
+        sudo chmod 644 "$DSKDIR/$APPDESK"
+    fi
+    exit 0
+    ;;
+
+idesk)
+    file "$BINDIR/$APPNAME"
+    file "$PIXDIR/$APPICON"
+    file "$DSKDIR/$APPDESK"
+    exit 0
+    ;;
+
+rdesk)
+    # if CONFIRM "Remove Docker files?"; then
+    #     exec "$0" down -D FOREGROUND
+    # fi
+    sudo rm -Iv "$BINDIR/$APPNAME"
+    sudo rm -Iv "$PIXDIR/$APPICON"
+    sudo rm -Iv "$DSKDIR/$APPDESK"
+    exit 0
+    ;;
+
+*)
+    printf "$USAGE_HELP";
+    exit 1
+    ;;
+esac
+
+exit 0

@@ -1,0 +1,19 @@
+[Desktop Entry]
+Type=Application
+Terminal=true
+StartupNotify=true
+MimeType=text/plain;
+Version=1.0
+Categories=Network;Development;
+Keywords=web;dev;webdev;development;web development;docker web;docker dev;
+Name=DockerWebdev
+Exec=webdev up
+Icon=webdev.png
+GenericName=Docker Webdev
+GenericName[fr]=Docker de web développement
+GenericName[ru]=Докер веб-разработка
+GenericName[ua]=Докер веб-розробка
+Comment=A Web Development Docker Service
+Comment[fr]=Service de docker de développement Web
+Comment[ru]=Докер-служба для веб-разработки
+Comment[ua]=Докер-служба для веб-розробки
