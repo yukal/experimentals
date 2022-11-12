@@ -1,0 +1,1294 @@
+<?xml version="1.0"?>
+<schema xmlns:xs="http://www.w3.org/2001/XMLSchema" blockDefault="#all" elementFormDefault="qualified" xml:lang="EN" targetNamespace="http://www.w3.org/2001/XMLSchema" version="Id: structures.xsd,v 1.2 2004/01/15 11:34:25 ht Exp">
+	<annotation>
+		<documentation source="../structures/structures-with-errata.html.html">
+			The schema corresponding to this document is normative,
+			with respect to the syntactic constraints it expresses in the
+			XML Schema language.  The documentation (within &lt;documentation> elements)
+			below, is not normative, but rather highlights important aspects of
+			the W3C Recommendation of which this is a part
+		</documentation>
+	</annotation>
+
+	<annotation>
+		<documentation>
+			The simpleType element and all of its members are defined
+			in datatypes.xsd
+		</documentation>
+	</annotation>
+
+	<include schemaLocation="datatypes.xsd" />
+
+	<import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/xml.xsd">
+		<annotation>
+			<documentation>
+				Get access to the xml: attribute groups for xml:lang
+				as declared on 'schema' and 'documentation' below
+			</documentation>
+		</annotation>
+	</import>
+
+	<complexType name="openAttrs">
+		<annotation>
+			<documentation>
+				This type is extended by almost all schema types
+				to allow attributes from other namespaces to be
+				added to user schemas.
+			</documentation>
+		</annotation>
+		<complexContent>
+			<restriction base="xs:anyType">
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<complexType name="annotated">
+		<annotation>
+			<documentation>
+				This type is extended by all types which allow annotation
+				other than &lt;schema> itself
+			</documentation>
+		</annotation>
+		<complexContent>
+			<extension base="xs:openAttrs">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+				</sequence>
+				<attribute name="id" type="xs:ID" />
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<group name="schemaTop">
+		<annotation>
+			<documentation>
+				This group is for the
+				elements which occur freely at the top level of schemas.
+				All of their types are based on the "annotated" type by extension.
+			</documentation>
+		</annotation>
+		<choice>
+			<group ref="xs:redefinable" />
+			<element ref="xs:element" />
+			<element ref="xs:attribute" />
+			<element ref="xs:notation" />
+		</choice>
+	</group>
+
+	<group name="redefinable">
+		<annotation>
+			<documentation>
+				This group is for the
+				elements which can self-redefine (see &lt;redefine> below).
+			</documentation>
+		</annotation>
+		<choice>
+			<element ref="xs:simpleType" />
+			<element ref="xs:complexType" />
+			<element ref="xs:group" />
+			<element ref="xs:attributeGroup" />
+		</choice>
+	</group>
+
+	<simpleType name="formChoice">
+		<annotation>
+			<documentation>
+				A utility type, not for public use
+			</documentation>
+		</annotation>
+		<restriction base="xs:NMTOKEN">
+			<enumeration value="qualified" />
+			<enumeration value="unqualified" />
+		</restriction>
+	</simpleType>
+
+	<simpleType name="reducedDerivationControl">
+		<annotation>
+			<documentation>
+				A utility type, not for public use
+			</documentation>
+		</annotation>
+		<restriction base="xs:derivationControl">
+			<enumeration value="extension" />
+			<enumeration value="restriction" />
+		</restriction>
+	</simpleType>
+
+	<simpleType name="derivationSet">
+		<annotation>
+			<documentation>
+				A utility type, not for public use
+			</documentation>
+			<documentation>
+				#all or (possibly empty) subset of {extension, restriction}
+			</documentation>
+		</annotation>
+		<union>
+			<simpleType>
+				<restriction base="xs:token">
+					<enumeration value="#all" />
+				</restriction>
+			</simpleType>
+			<simpleType>
+				<list itemType="xs:reducedDerivationControl" />
+			</simpleType>
+		</union>
+	</simpleType>
+
+	<simpleType name="typeDerivationControl">
+		<annotation>
+			<documentation>
+				A utility type, not for public use
+			</documentation>
+		</annotation>
+		<restriction base="xs:derivationControl">
+			<enumeration value="extension" />
+			<enumeration value="restriction" />
+			<enumeration value="list" />
+			<enumeration value="union" />
+		</restriction>
+	</simpleType>
+
+	<simpleType name="fullDerivationSet">
+		<annotation>
+			<documentation>
+				A utility type, not for public use
+			</documentation>
+			<documentation>
+				#all or (possibly empty) subset of {extension, restriction, list, union}
+			</documentation>
+		</annotation>
+		<union>
+			<simpleType>
+				<restriction base="xs:token">
+					<enumeration value="#all" />
+				</restriction>
+			</simpleType>
+			<simpleType>
+				<list itemType="xs:typeDerivationControl" />
+			</simpleType>
+		</union>
+	</simpleType>
+
+	<element name="schema" id="schema">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-schema" />
+		</annotation>
+		<complexType>
+			<complexContent>
+				<extension base="xs:openAttrs">
+					<sequence>
+						<choice minOccurs="0" maxOccurs="unbounded">
+							<element ref="xs:include" />
+							<element ref="xs:import" />
+							<element ref="xs:redefine" />
+							<element ref="xs:annotation" />
+						</choice>
+						<sequence minOccurs="0" maxOccurs="unbounded">
+							<group ref="xs:schemaTop" />
+							<element ref="xs:annotation" minOccurs="0" maxOccurs="unbounded" />
+						</sequence>
+					</sequence>
+					<attribute name="targetNamespace" type="xs:anyURI" />
+					<attribute name="version" type="xs:token" />
+					<attribute name="finalDefault" type="xs:fullDerivationSet" default="" use="optional" />
+					<attribute name="blockDefault" type="xs:blockSet" default="" use="optional" />
+					<attribute name="attributeFormDefault" type="xs:formChoice" default="unqualified" use="optional" />
+					<attribute name="elementFormDefault" type="xs:formChoice" default="unqualified" use="optional" />
+					<attribute name="id" type="xs:ID" />
+					<attribute ref="xml:lang" />
+				</extension>
+			</complexContent>
+		</complexType>
+		<key name="element">
+			<selector xpath="xs:element" />
+			<field xpath="@name" />
+		</key>
+		<key name="attribute">
+			<selector xpath="xs:attribute" />
+			<field xpath="@name" />
+		</key>
+		<key name="type">
+			<selector xpath="xs:complexType|xs:simpleType" />
+			<field xpath="@name" />
+		</key>
+		<key name="group">
+			<selector xpath="xs:group" />
+			<field xpath="@name" />
+		</key>
+		<key name="attributeGroup">
+			<selector xpath="xs:attributeGroup" />
+			<field xpath="@name" />
+		</key>
+		<key name="notation">
+			<selector xpath="xs:notation" />
+			<field xpath="@name" />
+		</key>
+		<key name="identityConstraint">
+			<selector xpath=".//xs:key|.//xs:unique|.//xs:keyref" />
+			<field xpath="@name" />
+		</key>
+	</element>
+
+	<simpleType name="allNNI">
+		<annotation>
+			<documentation>
+				for maxOccurs
+			</documentation>
+		</annotation>
+		<union memberTypes="xs:nonNegativeInteger">
+			<simpleType>
+				<restriction base="xs:NMTOKEN">
+					<enumeration value="unbounded" />
+				</restriction>
+			</simpleType>
+		</union>
+	</simpleType>
+
+	<attributeGroup name="occurs">
+		<annotation>
+			<documentation>
+				for all particles
+			</documentation>
+		</annotation>
+		<attribute name="minOccurs" type="xs:nonNegativeInteger" default="1" use="optional" />
+		<attribute name="maxOccurs" type="xs:allNNI" default="1" use="optional" />
+	</attributeGroup>
+
+	<attributeGroup name="defRef">
+		<annotation>
+			<documentation>
+				for element, group and attributeGroup,
+				which both define and reference
+			</documentation>
+		</annotation>
+		<attribute name="name" type="xs:NCName" />
+		<attribute name="ref" type="xs:QName" />
+	</attributeGroup>
+
+	<group name="typeDefParticle">
+		<annotation>
+			<documentation>
+				'complexType' uses this
+			</documentation>
+		</annotation>
+		<choice>
+			<element name="group" type="xs:groupRef" />
+			<element ref="xs:all" />
+			<element ref="xs:choice" />
+			<element ref="xs:sequence" />
+		</choice>
+	</group>
+
+	<group name="nestedParticle">
+		<choice>
+			<element name="element" type="xs:localElement" />
+			<element name="group" type="xs:groupRef" />
+			<element ref="xs:choice" />
+			<element ref="xs:sequence" />
+			<element ref="xs:any" />
+		</choice>
+	</group>
+
+	<group name="particle">
+		<choice>
+			<element name="element" type="xs:localElement" />
+			<element name="group" type="xs:groupRef" />
+			<element ref="xs:all" />
+			<element ref="xs:choice" />
+			<element ref="xs:sequence" />
+			<element ref="xs:any" />
+		</choice>
+	</group>
+
+	<complexType name="attribute">
+		<complexContent>
+			<extension base="xs:annotated">
+				<sequence>
+					<element name="simpleType" type="xs:localSimpleType" minOccurs="0" />
+				</sequence>
+				<attributeGroup ref="xs:defRef" />
+				<attribute name="type" type="xs:QName" />
+				<attribute name="use" default="optional" use="optional">
+					<simpleType>
+						<restriction base="xs:NMTOKEN">
+							<enumeration value="prohibited" />
+							<enumeration value="optional" />
+							<enumeration value="required" />
+						</restriction>
+					</simpleType>
+				</attribute>
+				<attribute name="default" type="xs:string" />
+				<attribute name="fixed" type="xs:string" />
+				<attribute name="form" type="xs:formChoice" />
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<complexType name="topLevelAttribute">
+		<complexContent>
+			<restriction base="xs:attribute">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+					<element name="simpleType" type="xs:localSimpleType" minOccurs="0" />
+				</sequence>
+				<attribute name="ref" use="prohibited" />
+				<attribute name="form" use="prohibited" />
+				<attribute name="use" use="prohibited" />
+				<attribute name="name" type="xs:NCName" use="required" />
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<group name="attrDecls">
+		<sequence>
+			<choice minOccurs="0" maxOccurs="unbounded">
+				<element name="attribute" type="xs:attribute" />
+				<element name="attributeGroup" type="xs:attributeGroupRef" />
+			</choice>
+			<element ref="xs:anyAttribute" minOccurs="0" />
+		</sequence>
+	</group>
+
+	<element name="anyAttribute" type="xs:wildcard" id="anyAttribute">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-anyAttribute" />
+		</annotation>
+	</element>
+
+	<group name="complexTypeModel">
+		<choice>
+			<element ref="xs:simpleContent" />
+			<element ref="xs:complexContent" />
+			<sequence>
+				<annotation>
+					<documentation>
+						This branch is short for
+						&lt;complexContent>
+						&lt;restriction base="xs:anyType">
+						...
+						&lt;/restriction>
+						&lt;/complexContent>
+					</documentation>
+				</annotation>
+				<group ref="xs:typeDefParticle" minOccurs="0" />
+				<group ref="xs:attrDecls" />
+			</sequence>
+		</choice>
+	</group>
+
+	<complexType name="complexType" abstract="true">
+		<complexContent>
+			<extension base="xs:annotated">
+				<group ref="xs:complexTypeModel" />
+				<attribute name="name" type="xs:NCName">
+					<annotation>
+						<documentation>
+							Will be restricted to required or forbidden
+						</documentation>
+					</annotation>
+				</attribute>
+				<attribute name="mixed" type="xs:boolean" default="false" use="optional">
+					<annotation>
+						<documentation>
+							Not allowed if simpleContent child is chosen.
+							May be overriden by setting on complexContent child.
+						</documentation>
+					</annotation>
+				</attribute>
+				<attribute name="abstract" type="xs:boolean" default="false" use="optional" />
+				<attribute name="final" type="xs:derivationSet" />
+				<attribute name="block" type="xs:derivationSet" />
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<complexType name="topLevelComplexType">
+		<complexContent>
+			<restriction base="xs:complexType">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+					<group ref="xs:complexTypeModel" />
+				</sequence>
+				<attribute name="name" type="xs:NCName" use="required" />
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<complexType name="localComplexType">
+		<complexContent>
+			<restriction base="xs:complexType">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+					<group ref="xs:complexTypeModel" />
+				</sequence>
+				<attribute name="name" use="prohibited" />
+				<attribute name="abstract" use="prohibited" />
+				<attribute name="final" use="prohibited" />
+				<attribute name="block" use="prohibited" />
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<complexType name="restrictionType">
+		<complexContent>
+			<extension base="xs:annotated">
+				<sequence>
+					<choice minOccurs="0">
+						<group ref="xs:typeDefParticle" />
+						<group ref="xs:simpleRestrictionModel" />
+					</choice>
+					<group ref="xs:attrDecls" />
+				</sequence>
+				<attribute name="base" type="xs:QName" use="required" />
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<complexType name="complexRestrictionType">
+		<complexContent>
+			<restriction base="xs:restrictionType">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+					<choice minOccurs="0">
+						<annotation>
+							<documentation>
+								This choice is added simply to
+								make this a valid restriction per the REC
+							</documentation>
+						</annotation>
+						<group ref="xs:typeDefParticle" />
+					</choice>
+					<group ref="xs:attrDecls" />
+				</sequence>
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<complexType name="extensionType">
+		<complexContent>
+			<extension base="xs:annotated">
+				<sequence>
+					<group ref="xs:typeDefParticle" minOccurs="0" />
+					<group ref="xs:attrDecls" />
+				</sequence>
+				<attribute name="base" type="xs:QName" use="required" />
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<element name="complexContent" id="complexContent">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-complexContent" />
+		</annotation>
+		<complexType>
+			<complexContent>
+				<extension base="xs:annotated">
+					<choice>
+						<element name="restriction" type="xs:complexRestrictionType" />
+						<element name="extension" type="xs:extensionType" />
+					</choice>
+					<attribute name="mixed" type="xs:boolean">
+						<annotation>
+							<documentation>
+								Overrides any setting on complexType parent.
+							</documentation>
+						</annotation>
+					</attribute>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<complexType name="simpleRestrictionType">
+		<complexContent>
+			<restriction base="xs:restrictionType">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+					<choice minOccurs="0">
+						<annotation>
+							<documentation>
+								This choice is added simply to
+								make this a valid restriction per the REC
+							</documentation>
+						</annotation>
+						<group ref="xs:simpleRestrictionModel" />
+					</choice>
+					<group ref="xs:attrDecls" />
+				</sequence>
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<complexType name="simpleExtensionType">
+		<complexContent>
+			<restriction base="xs:extensionType">
+				<sequence>
+					<annotation>
+						<documentation>
+							No typeDefParticle group reference
+						</documentation>
+					</annotation>
+					<element ref="xs:annotation" minOccurs="0" />
+					<group ref="xs:attrDecls" />
+				</sequence>
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<element name="simpleContent" id="simpleContent">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-simpleContent" />
+		</annotation>
+		<complexType>
+			<complexContent>
+				<extension base="xs:annotated">
+					<choice>
+						<element name="restriction" type="xs:simpleRestrictionType" />
+						<element name="extension" type="xs:simpleExtensionType" />
+					</choice>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<element name="complexType" type="xs:topLevelComplexType" id="complexType">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-complexType" />
+		</annotation>
+	</element>
+
+	<simpleType name="blockSet">
+		<annotation>
+			<documentation>
+				A utility type, not for public use
+			</documentation>
+			<documentation>
+				#all or (possibly empty) subset of {substitution, extension,
+				restriction}
+			</documentation>
+		</annotation>
+		<union>
+			<simpleType>
+				<restriction base="xs:token">
+					<enumeration value="#all" />
+				</restriction>
+			</simpleType>
+			<simpleType>
+				<list>
+					<simpleType>
+						<restriction base="xs:derivationControl">
+							<enumeration value="extension" />
+							<enumeration value="restriction" />
+							<enumeration value="substitution" />
+						</restriction>
+					</simpleType>
+				</list>
+			</simpleType>
+		</union>
+	</simpleType>
+
+	<complexType name="element" abstract="true">
+		<annotation>
+			<documentation>
+				The element element can be used either
+				at the top level to define an element-type binding globally,
+				or within a content model to either reference a globally-defined
+				element or type or declare an element-type binding locally.
+				The ref form is not allowed at the top level.
+			</documentation>
+		</annotation>
+		<complexContent>
+			<extension base="xs:annotated">
+				<sequence>
+					<choice minOccurs="0">
+						<element name="simpleType" type="xs:localSimpleType" />
+						<element name="complexType" type="xs:localComplexType" />
+					</choice>
+					<group ref="xs:identityConstraint" minOccurs="0" maxOccurs="unbounded" />
+				</sequence>
+				<attributeGroup ref="xs:defRef" />
+				<attribute name="type" type="xs:QName" />
+				<attribute name="substitutionGroup" type="xs:QName" />
+				<attributeGroup ref="xs:occurs" />
+				<attribute name="default" type="xs:string" />
+				<attribute name="fixed" type="xs:string" />
+				<attribute name="nillable" type="xs:boolean" default="false" use="optional" />
+				<attribute name="abstract" type="xs:boolean" default="false" use="optional" />
+				<attribute name="final" type="xs:derivationSet" />
+				<attribute name="block" type="xs:blockSet" />
+				<attribute name="form" type="xs:formChoice" />
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<complexType name="topLevelElement">
+		<complexContent>
+			<restriction base="xs:element">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+					<choice minOccurs="0">
+						<element name="simpleType" type="xs:localSimpleType" />
+						<element name="complexType" type="xs:localComplexType" />
+					</choice>
+					<group ref="xs:identityConstraint" minOccurs="0" maxOccurs="unbounded" />
+				</sequence>
+				<attribute name="ref" use="prohibited" />
+				<attribute name="form" use="prohibited" />
+				<attribute name="minOccurs" use="prohibited" />
+				<attribute name="maxOccurs" use="prohibited" />
+				<attribute name="name" type="xs:NCName" use="required" />
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<complexType name="localElement">
+		<complexContent>
+			<restriction base="xs:element">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+					<choice minOccurs="0">
+						<element name="simpleType" type="xs:localSimpleType" />
+						<element name="complexType" type="xs:localComplexType" />
+					</choice>
+					<group ref="xs:identityConstraint" minOccurs="0" maxOccurs="unbounded" />
+				</sequence>
+				<attribute name="substitutionGroup" use="prohibited" />
+				<attribute name="final" use="prohibited" />
+				<attribute name="abstract" use="prohibited" />
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<element name="element" type="xs:topLevelElement" id="element">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-element" />
+		</annotation>
+	</element>
+
+	<complexType name="group" abstract="true">
+		<annotation>
+			<documentation>
+				group type for explicit groups, named top-level groups and
+				group references
+			</documentation>
+		</annotation>
+		<complexContent>
+			<extension base="xs:annotated">
+				<group ref="xs:particle" minOccurs="0" maxOccurs="unbounded" />
+				<attributeGroup ref="xs:defRef" />
+				<attributeGroup ref="xs:occurs" />
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<complexType name="realGroup">
+		<complexContent>
+			<restriction base="xs:group">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+					<choice minOccurs="0" maxOccurs="1">
+						<element ref="xs:all" />
+						<element ref="xs:choice" />
+						<element ref="xs:sequence" />
+					</choice>
+				</sequence>
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<complexType name="namedGroup">
+		<complexContent>
+			<restriction base="xs:realGroup">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+					<choice minOccurs="1" maxOccurs="1">
+						<element name="all">
+							<complexType>
+								<complexContent>
+									<restriction base="xs:all">
+										<group ref="xs:allModel" />
+										<attribute name="minOccurs" use="prohibited" />
+										<attribute name="maxOccurs" use="prohibited" />
+										<anyAttribute namespace="##other" processContents="lax" />
+									</restriction>
+								</complexContent>
+							</complexType>
+						</element>
+						<element name="choice" type="xs:simpleExplicitGroup" />
+						<element name="sequence" type="xs:simpleExplicitGroup" />
+					</choice>
+				</sequence>
+				<attribute name="name" type="xs:NCName" use="required" />
+				<attribute name="ref" use="prohibited" />
+				<attribute name="minOccurs" use="prohibited" />
+				<attribute name="maxOccurs" use="prohibited" />
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<complexType name="groupRef">
+		<complexContent>
+			<restriction base="xs:realGroup">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+				</sequence>
+				<attribute name="ref" type="xs:QName" use="required" />
+				<attribute name="name" use="prohibited" />
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<complexType name="explicitGroup">
+		<annotation>
+			<documentation>
+				group type for the three kinds of group
+			</documentation>
+		</annotation>
+		<complexContent>
+			<restriction base="xs:group">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+					<group ref="xs:nestedParticle" minOccurs="0" maxOccurs="unbounded" />
+				</sequence>
+				<attribute name="name" type="xs:NCName" use="prohibited" />
+				<attribute name="ref" type="xs:QName" use="prohibited" />
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<complexType name="simpleExplicitGroup">
+		<complexContent>
+			<restriction base="xs:explicitGroup">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+					<group ref="xs:nestedParticle" minOccurs="0" maxOccurs="unbounded" />
+				</sequence>
+				<attribute name="minOccurs" use="prohibited" />
+				<attribute name="maxOccurs" use="prohibited" />
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<group name="allModel">
+		<sequence>
+			<element ref="xs:annotation" minOccurs="0" />
+			<choice minOccurs="0" maxOccurs="unbounded">
+				<annotation>
+					<documentation>
+						This choice with min/max is here to
+						avoid a pblm with the Elt:All/Choice/Seq
+						Particle derivation constraint
+					</documentation>
+				</annotation>
+				<element name="element" type="xs:narrowMaxMin" />
+			</choice>
+		</sequence>
+	</group>
+
+	<complexType name="narrowMaxMin">
+		<annotation>
+			<documentation>
+				restricted max/min
+			</documentation>
+		</annotation>
+		<complexContent>
+			<restriction base="xs:localElement">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+					<choice minOccurs="0">
+						<element name="simpleType" type="xs:localSimpleType" />
+						<element name="complexType" type="xs:localComplexType" />
+					</choice>
+					<group ref="xs:identityConstraint" minOccurs="0" maxOccurs="unbounded" />
+				</sequence>
+				<attribute name="minOccurs" default="1" use="optional">
+					<simpleType>
+						<restriction base="xs:nonNegativeInteger">
+							<enumeration value="0" />
+							<enumeration value="1" />
+						</restriction>
+					</simpleType>
+				</attribute>
+				<attribute name="maxOccurs" default="1" use="optional">
+					<simpleType>
+						<restriction base="xs:allNNI">
+							<enumeration value="0" />
+							<enumeration value="1" />
+						</restriction>
+					</simpleType>
+				</attribute>
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<complexType name="all">
+		<annotation>
+			<documentation>
+				Only elements allowed inside
+			</documentation>
+		</annotation>
+		<complexContent>
+			<restriction base="xs:explicitGroup">
+				<group ref="xs:allModel" />
+				<attribute name="minOccurs" default="1" use="optional">
+					<simpleType>
+						<restriction base="xs:nonNegativeInteger">
+							<enumeration value="0" />
+							<enumeration value="1" />
+						</restriction>
+					</simpleType>
+				</attribute>
+				<attribute name="maxOccurs" default="1" use="optional">
+					<simpleType>
+						<restriction base="xs:allNNI">
+							<enumeration value="1" />
+						</restriction>
+					</simpleType>
+				</attribute>
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<element name="all" type="xs:all" id="all">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-all" />
+		</annotation>
+	</element>
+
+	<element name="choice" type="xs:explicitGroup" id="choice">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-choice" />
+		</annotation>
+	</element>
+
+	<element name="sequence" type="xs:explicitGroup" id="sequence">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-sequence" />
+		</annotation>
+	</element>
+
+	<element name="group" type="xs:namedGroup" id="group">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-group" />
+		</annotation>
+	</element>
+
+	<complexType name="wildcard">
+		<complexContent>
+			<extension base="xs:annotated">
+				<attribute name="namespace" type="xs:namespaceList" default="##any" use="optional" />
+				<attribute name="processContents" default="strict" use="optional">
+					<simpleType>
+						<restriction base="xs:NMTOKEN">
+							<enumeration value="skip" />
+							<enumeration value="lax" />
+							<enumeration value="strict" />
+						</restriction>
+					</simpleType>
+				</attribute>
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<element name="any" id="any">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-any" />
+		</annotation>
+		<complexType>
+			<complexContent>
+				<extension base="xs:wildcard">
+					<attributeGroup ref="xs:occurs" />
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<annotation>
+		<documentation>
+			simple type for the value of the 'namespace' attr of
+			'any' and 'anyAttribute'
+		</documentation>
+	</annotation>
+
+	<annotation>
+		<documentation>
+			Value is
+			##any      - - any non-conflicting WFXML/attribute at all
+			
+			##other    - - any non-conflicting WFXML/attribute from
+			namespace other than targetNS
+			
+			##local    - - any unqualified non-conflicting WFXML/attribute
+			
+			one or     - - any non-conflicting WFXML/attribute from
+			more URI        the listed namespaces
+			references
+			(space separated)
+			
+			##targetNamespace or ##local may appear in the above list, to
+			refer to the targetNamespace of the enclosing
+			schema or an absent targetNamespace respectively
+		</documentation>
+	</annotation>
+
+	<simpleType name="namespaceList">
+		<annotation>
+			<documentation>
+				A utility type, not for public use
+			</documentation>
+		</annotation>
+		<union>
+			<simpleType>
+				<restriction base="xs:token">
+					<enumeration value="##any" />
+					<enumeration value="##other" />
+				</restriction>
+			</simpleType>
+			<simpleType>
+				<list>
+					<simpleType>
+						<union memberTypes="xs:anyURI">
+							<simpleType>
+								<restriction base="xs:token">
+									<enumeration value="##targetNamespace" />
+									<enumeration value="##local" />
+								</restriction>
+							</simpleType>
+						</union>
+					</simpleType>
+				</list>
+			</simpleType>
+		</union>
+	</simpleType>
+
+	<element name="attribute" type="xs:topLevelAttribute" id="attribute">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-attribute" />
+		</annotation>
+	</element>
+
+	<complexType name="attributeGroup" abstract="true">
+		<complexContent>
+			<extension base="xs:annotated">
+				<group ref="xs:attrDecls" />
+				<attributeGroup ref="xs:defRef" />
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<complexType name="namedAttributeGroup">
+		<complexContent>
+			<restriction base="xs:attributeGroup">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+					<group ref="xs:attrDecls" />
+				</sequence>
+				<attribute name="name" type="xs:NCName" use="required" />
+				<attribute name="ref" use="prohibited" />
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<complexType name="attributeGroupRef">
+		<complexContent>
+			<restriction base="xs:attributeGroup">
+				<sequence>
+					<element ref="xs:annotation" minOccurs="0" />
+				</sequence>
+				<attribute name="ref" type="xs:QName" use="required" />
+				<attribute name="name" use="prohibited" />
+				<anyAttribute namespace="##other" processContents="lax" />
+			</restriction>
+		</complexContent>
+	</complexType>
+
+	<element name="attributeGroup" type="xs:namedAttributeGroup" id="attributeGroup">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-attributeGroup" />
+		</annotation>
+	</element>
+
+	<element name="include" id="include">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-include" />
+		</annotation>
+		<complexType>
+			<complexContent>
+				<extension base="xs:annotated">
+					<attribute name="schemaLocation" type="xs:anyURI" use="required" />
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<element name="redefine" id="redefine">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-redefine" />
+		</annotation>
+		<complexType>
+			<complexContent>
+				<extension base="xs:openAttrs">
+					<choice minOccurs="0" maxOccurs="unbounded">
+						<element ref="xs:annotation" />
+						<group ref="xs:redefinable" />
+					</choice>
+					<attribute name="schemaLocation" type="xs:anyURI" use="required" />
+					<attribute name="id" type="xs:ID" />
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<element name="import" id="import">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-import" />
+		</annotation>
+		<complexType>
+			<complexContent>
+				<extension base="xs:annotated">
+					<attribute name="namespace" type="xs:anyURI" />
+					<attribute name="schemaLocation" type="xs:anyURI" />
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<element name="selector" id="selector">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-selector" />
+		</annotation>
+		<complexType>
+			<complexContent>
+				<extension base="xs:annotated">
+					<attribute name="xpath" use="required">
+						<simpleType>
+							<annotation>
+								<documentation>
+									A subset of XPath expressions for use
+									in selectors
+								</documentation>
+								<documentation>
+									A utility type, not for public
+									use
+								</documentation>
+							</annotation>
+							<restriction base="xs:token">
+								<annotation>
+									<documentation>
+										The following pattern is intended to allow XPath
+										expressions per the following EBNF:
+										Selector    ::=    Path ( '|' Path )*
+										Path    ::=    ('.//')? Step ( '/' Step )*
+										Step    ::=    '.' | NameTest
+										NameTest    ::=    QName | '*' | NCName ':' '*'
+										child:: is also allowed
+									</documentation>
+								</annotation>
+								<pattern value="(\.//)?(((child::)?((\i\c*:)?(\i\c*|\*)))|\.)(/(((child::)?((\i\c*:)?(\i\c*|\*)))|\.))*(\|(\.//)?(((child::)?((\i\c*:)?(\i\c*|\*)))|\.)(/(((child::)?((\i\c*:)?(\i\c*|\*)))|\.))*)*" />
+							</restriction>
+						</simpleType>
+					</attribute>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<element name="field" id="field">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-field" />
+		</annotation>
+		<complexType>
+			<complexContent>
+				<extension base="xs:annotated">
+					<attribute name="xpath" use="required">
+						<simpleType>
+							<annotation>
+								<documentation>
+									A subset of XPath expressions for use
+									in fields
+								</documentation>
+								<documentation>
+									A utility type, not for public
+									use
+								</documentation>
+							</annotation>
+							<restriction base="xs:token">
+								<annotation>
+									<documentation>
+										The following pattern is intended to allow XPath
+										expressions per the same EBNF as for selector,
+										with the following change:
+										Path    ::=    ('.//')? ( Step '/' )* ( Step | '@' NameTest )
+									</documentation>
+								</annotation>
+								<pattern value="(\.//)?((((child::)?((\i\c*:)?(\i\c*|\*)))|\.)/)*((((child::)?((\i\c*:)?(\i\c*|\*)))|\.)|((attribute::|@)((\i\c*:)?(\i\c*|\*))))(\|(\.//)?((((child::)?((\i\c*:)?(\i\c*|\*)))|\.)/)*((((child::)?((\i\c*:)?(\i\c*|\*)))|\.)|((attribute::|@)((\i\c*:)?(\i\c*|\*)))))*" />
+							</restriction>
+						</simpleType>
+					</attribute>
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<complexType name="keybase">
+		<complexContent>
+			<extension base="xs:annotated">
+				<sequence>
+					<element ref="xs:selector" />
+					<element ref="xs:field" minOccurs="1" maxOccurs="unbounded" />
+				</sequence>
+				<attribute name="name" type="xs:NCName" use="required" />
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<group name="identityConstraint">
+		<annotation>
+			<documentation>
+				The three kinds of identity constraints, all with
+				type of or derived from 'keybase'.
+			</documentation>
+		</annotation>
+		<choice>
+			<element ref="xs:unique" />
+			<element ref="xs:key" />
+			<element ref="xs:keyref" />
+		</choice>
+	</group>
+
+	<element name="unique" type="xs:keybase" id="unique">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-unique" />
+		</annotation>
+	</element>
+
+	<element name="key" type="xs:keybase" id="key">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-key" />
+		</annotation>
+	</element>
+
+	<element name="keyref" id="keyref">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-keyref" />
+		</annotation>
+		<complexType>
+			<complexContent>
+				<extension base="xs:keybase">
+					<attribute name="refer" type="xs:QName" use="required" />
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<element name="notation" id="notation">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-notation" />
+		</annotation>
+		<complexType>
+			<complexContent>
+				<extension base="xs:annotated">
+					<attribute name="name" type="xs:NCName" use="required" />
+					<attribute name="public" type="xs:public" />
+					<attribute name="system" type="xs:anyURI" />
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<simpleType name="public">
+		<annotation>
+			<documentation>
+				A utility type, not for public use
+			</documentation>
+			<documentation>
+				A public identifier, per ISO 8879
+			</documentation>
+		</annotation>
+		<restriction base="xs:token" />
+	</simpleType>
+
+	<element name="appinfo" id="appinfo">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-appinfo" />
+		</annotation>
+		<complexType mixed="true">
+			<sequence minOccurs="0" maxOccurs="unbounded">
+				<any processContents="lax" />
+			</sequence>
+			<attribute name="source" type="xs:anyURI" />
+			<anyAttribute namespace="##other" processContents="lax" />
+		</complexType>
+	</element>
+
+	<element name="documentation" id="documentation">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-documentation" />
+		</annotation>
+		<complexType mixed="true">
+			<sequence minOccurs="0" maxOccurs="unbounded">
+				<any processContents="lax" />
+			</sequence>
+			<attribute name="source" type="xs:anyURI" />
+			<attribute ref="xml:lang" />
+			<anyAttribute namespace="##other" processContents="lax" />
+		</complexType>
+	</element>
+
+	<element name="annotation" id="annotation">
+		<annotation>
+			<documentation source="http://www.w3.org/TR/xmlschema-1/#element-annotation" />
+		</annotation>
+		<complexType>
+			<complexContent>
+				<extension base="xs:openAttrs">
+					<choice minOccurs="0" maxOccurs="unbounded">
+						<element ref="xs:appinfo" />
+						<element ref="xs:documentation" />
+					</choice>
+					<attribute name="id" type="xs:ID" />
+				</extension>
+			</complexContent>
+		</complexType>
+	</element>
+
+	<annotation>
+		<documentation>
+			notations for use within XML Schema schemas
+		</documentation>
+	</annotation>
+
+	<notation name="XMLSchemaStructures" public="structures" system="http://www.w3.org/2000/08/XMLSchema.xsd" />
+	<notation name="XML" public="REC-xml-19980210" system="http://www.w3.org/TR/1998/REC-xml-19980210" />
+
+	<complexType name="anyType" mixed="true">
+		<annotation>
+			<documentation>
+				Not the real urType, but as close an approximation as we can
+				get in the XML representation
+			</documentation>
+		</annotation>
+		<sequence>
+			<any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
+		</sequence>
+		<anyAttribute processContents="lax" />
+	</complexType>
+</schema>
