@@ -1,0 +1,26 @@
+{
+  "name": "experimentals",
+  "version": "0.1.0",
+  "description": "Experimental works aimed at education and creative solutions",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "npx mocha --no-config --no-package ./test/**/test*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yukal/experimentals.git"
+  },
+  "keywords": [],
+  "author": "Alexander Yukal <yukal.alexander@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yukal/experimentals/issues"
+  },
+  "homepage": "https://github.com/yukal/experimentals#readme",
+  "devDependencies": {
+    "mocha": "^10.1.0"
+  }
+}
