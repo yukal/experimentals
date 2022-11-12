@@ -9,6 +9,10 @@ class BasicModel {
     });
   }
 
+  /**
+   * Get table name from a constructor name of the model
+   * and represent it in a lower snake case format (SomeModel => some_model)
+   */
   get tableName() {
     // const name = this.constructor.name.slice(0, -5);
     let name = this.constructor.name.replace(/Model$/i, '');
@@ -33,11 +37,22 @@ class BasicModel {
     return `${name}_id`.toLowerCase();
   }
 
+  /**
+   * Check does the record exists in the Database
+   * @param {Number} id Id of the record
+   * @returns boolean
+   */
   async doesExist(id) {
     const row = await this.selectOne(id, [this.primaryKey]);
     return row == undefined ? false : row[this.primaryKey] == id;
   }
 
+  /**
+   * Select record by a specific ID in the Database
+   * @param {Number} id ID of the record
+   * @param {Array} fields A list of fields in table
+   * @returns object
+   */
   selectOne(id, fields) {
     const { tableName, primaryKey } = this;
 
@@ -51,6 +66,11 @@ class BasicModel {
     });
   }
 
+  /**
+   * Insert data to a Database and return the last inserted ID
+   * @param {Object} data 
+   * @returns number Last inserted ID
+   */
   insertOne(data) {
     const { primaryKey, tableName, tableFields } = this;
     const { [primaryKey]: pk, ...dataToInsert } = data;
@@ -110,6 +130,12 @@ class BasicModel {
     });
   }
 
+  /**
+   * Inserts data step by step and receives each last inserted ID of the record
+   * @param {Array} fields The fields of a specific table
+   * @param {Array} values Values to be inserted into DataBase
+   * @returns Promise<IDs> ID list of the inserted records
+   */
   insertRowsRecursively(fields = [], values = []) {
     const { tableName, tableFields } = this;
 
@@ -137,6 +163,12 @@ class BasicModel {
     });
   }
 
+  /**
+   * Insert rows per one request. It does not return the IDs list of the inserted rows
+   * @param {Array} fields The fields of a specific table
+   * @param {Array} values Values to be inserted into DataBase
+   * @returns Number The number of last insrted rows
+   */
   insertRowsNatively(fields = [], values = []) {
     const { tableName, tableFields } = this;
 
@@ -169,7 +201,11 @@ class BasicModel {
     });
   }
 
-  // Insert bonded relatives
+  /**
+   * Insert bonded relatives (useful for tables with junctions having a one to many or a many to many relations)
+   * @param {Object} options 
+   * @returns Number The number of last insrted rows
+   */
   insertBondedRelatives(options) {
     const { tableName, tableFields } = this;
 
