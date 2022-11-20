@@ -1,0 +1,29 @@
+{
+  "name": "migration",
+  "version": "1.0.0",
+  "description": "migration experimental solution",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cli:enable": "chmod +x ./src/cli/migration.js && cd ./node_modules/.bin && ln -s ../../src/cli/migration.js migration",
+    "cli:disable": "chmod -x ./src/cli/migration.js && rm ./node_modules/.bin/migration"
+  },
+  "keywords": [
+    "migration",
+    "database"
+  ],
+  "author": "Alexander Yukal <yukal.alexander@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^18.8.4",
+    "sqlite3": "^5.1.2"
+  },
+  "application": {
+    "database": {
+      "filePath": "./data/database.db",
+      "migration": {
+        "path": "./data/migration"
+      }
+    }
+  }
+}
