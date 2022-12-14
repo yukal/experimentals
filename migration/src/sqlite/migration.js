@@ -13,6 +13,11 @@ const {
   S_IROTH, S_IWOTH, S_IXOTH
 } = Fs.constants;
 
+const toCamelCase = (text) => {
+  return `-${text}`.toLowerCase()
+    .replace(/\W+(\w)/g, (match, firstLetter) => firstLetter.toUpperCase());
+}
+
 class Migration {
   constructor(db, settings) {
     // Define hidden readonly data
@@ -23,26 +28,27 @@ class Migration {
   }
 
   static generateId(description, type) {
-    const dateNumbers = new Date().toISOString().replace(/\D/g, '');
-    const randomBytes = Crypto.randomBytes(3).toString('hex');
+    const canonicalDate = new Date().toISOString().replace(/\D/g, '');
+    const randomBytesHex = Crypto.randomBytes(3).toString('hex');
     const hasDescription = description != undefined && description.length > 0;
-
-    if (hasDescription) {
-      description = `-${description}`.toLowerCase()
-        .replace(/\W+(\w)/g, (match, firstLetter) => firstLetter.toUpperCase());
-    }
 
     const migrationType = type ? type.toLowerCase() : '';
 
     return hasDescription
-      ? migrationType + dateNumbers + randomBytes + '-' + description
-      : migrationType + dateNumbers + randomBytes;
+      ? migrationType + canonicalDate + randomBytesHex + '-' + toCamelCase(description)
+      : migrationType + canonicalDate + randomBytesHex;
   }
 
-  generateId(description, type) {
-    return Migration.generateId(description, type);
-  }
-
+  /**
+   * Creates emty file with name based on migration type and description.
+   * For example:
+   *  up20221120152124307a37da4.sql
+   *  dn2022112015212441031eb16.sql
+   *
+   * @param {string} type Migration type [up | down]
+   * @param {string} description Migration description
+   * @returns object
+   */
   async createRecord(type, description) {
     const fileName = Migration.generateId(description, type);
     const fileBaseName = `${fileName}.${DB_FILE_EXT}`;
