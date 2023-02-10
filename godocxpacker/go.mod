@@ -1,4 +1,4 @@
-module github.com/yukal/experimentals/godocxpacker
+module github.com/yukal/godocxpacker
 
 go 1.19
 

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/yukal/experimentals/godocxpacker/src/structs"
+	"github.com/yukal/godocxpacker/src/structs"
 )
 
 const _FILEPATH_SEPARATOR = string(filepath.Separator)
