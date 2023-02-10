@@ -86,6 +86,7 @@ func (t *TemplateBuilder) Build(data *structs.DocxTemplate) error {
 		return err
 	}
 
+	var isOk bool
 	var zpack *ZPack
 	var tmplOverlay *template.Template
 
@@ -103,7 +104,7 @@ func (t *TemplateBuilder) Build(data *structs.DocxTemplate) error {
 
 		namespace := t.getNamespace(currPath)
 
-		if _, zpackOk := zpacks[namespace]; !zpackOk {
+		if zpack, isOk = zpacks[namespace]; !isOk {
 			fmt.Println(namespace)
 
 			buf := make([]byte, 8)
@@ -123,20 +124,21 @@ func (t *TemplateBuilder) Build(data *structs.DocxTemplate) error {
 
 			// defer zipFile.Close()
 
-			zipWriter := zip.NewWriter(zipFile)
+			// zipWriter := zip.NewWriter(zipFile)
 			// defer zipWriter.Close()
 
-			zpacks[namespace] = &ZPack{
+			zpack = &ZPack{
 				file:   zipFile,
-				writer: zipWriter,
+				writer: zip.NewWriter(zipFile),
 			}
+
+			zpacks[namespace] = zpack
 		}
 
-		zpack = zpacks[namespace]
 		pathPackingFile := t.getPathPackingFile(currPath)
 
 		if !strings.HasSuffix(currPath, ".tpl") {
-			bytesWritten, err := zpack.FromPath(currPath, pathPackingFile)
+			bytesWritten, err := zpack.addFromPath(currPath, pathPackingFile)
 
 			if err != nil {
 				return err
@@ -146,7 +148,7 @@ func (t *TemplateBuilder) Build(data *structs.DocxTemplate) error {
 			return nil
 		}
 
-		if _, tplOk := templates[namespace]; !tplOk {
+		if tmplOverlay, isOk = templates[namespace]; !isOk {
 			tmplOverlay = template.Must(tmplMaster.Clone())
 
 			_, err := tmplOverlay.ParseGlob(
@@ -169,7 +171,7 @@ func (t *TemplateBuilder) Build(data *structs.DocxTemplate) error {
 		buff := new(bytes.Buffer)
 		err = tmplOverlay.ExecuteTemplate(buff, curFilename, data)
 
-		bytesWritten, err := zpack.FromBuff(buff, pathPackingFile)
+		bytesWritten, err := zpack.addFromBuff(buff, pathPackingFile)
 		fmt.Printf("%s -> %#v (%#v)\n", zpack.file.Name(), pathPackingFile, bytesWritten)
 
 		if err != nil {
