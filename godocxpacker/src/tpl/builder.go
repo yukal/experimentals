@@ -17,26 +17,36 @@ import (
 
 const _FILEPATH_SEPARATOR = string(filepath.Separator)
 
-type TmplCompilerPaths struct {
-	App   string
-	Build string
-	Parts string
-	Docs  string
+type TmplBuilderPaths struct {
+	Templates string
+	Build     string
 }
 
-type TemplateCompiler struct {
-	paths *TmplCompilerPaths
+type templateBuilderPaths struct {
+	Templates string
+	Build     string
+	Docs      string
+	Parts     string
+}
+
+type TemplateBuilder struct {
+	paths *templateBuilderPaths
 	// data  *structs.DocxTemplate
 }
 
-func New(paths *TmplCompilerPaths) *TemplateCompiler {
-	return &TemplateCompiler{
-		paths: paths,
+func New(paths TmplBuilderPaths) *TemplateBuilder {
+	return &TemplateBuilder{
+		paths: &templateBuilderPaths{
+			Templates: paths.Templates,
+			Build:     paths.Build,
+			Docs:      path.Join(paths.Templates, "docs"),
+			Parts:     path.Join(paths.Templates, "parts"),
+		},
 		// data:  data,
 	}
 }
 
-func (t *TemplateCompiler) getNamespace(currPath string) string {
+func (t *TemplateBuilder) getNamespace(currPath string) string {
 	tmplContextPath := strings.Replace(currPath, t.paths.Docs, "", 1)
 
 	if strings.HasPrefix(tmplContextPath, _FILEPATH_SEPARATOR) {
@@ -52,7 +62,7 @@ func (t *TemplateCompiler) getNamespace(currPath string) string {
 	return tmplContextPath
 }
 
-func (t *TemplateCompiler) getPathPackingFile(currPath string) string {
+func (t *TemplateBuilder) getPathPackingFile(currPath string) string {
 	namespace := t.getNamespace(currPath)
 	filePath := strings.Replace(currPath,
 		filepath.Join(t.paths.Docs, namespace), "", 1)
@@ -68,9 +78,9 @@ func (t *TemplateCompiler) getPathPackingFile(currPath string) string {
 	return filePath
 }
 
-func (t *TemplateCompiler) Compile(data *structs.DocxTemplate) error {
+func (t *TemplateBuilder) Build(data *structs.DocxTemplate) error {
 	tmplMaster, err := template.ParseGlob(
-		path.Join(t.paths.App, "basic/*.tpl"))
+		path.Join(t.paths.Templates, "basic/*.tpl"))
 
 	if err != nil {
 		return err
@@ -170,7 +180,7 @@ func (t *TemplateCompiler) Compile(data *structs.DocxTemplate) error {
 	})
 
 	for _, zpack = range zpacks {
-		defer zpack.Cleanup()
+		zpack.Close()
 		// defer zpack.file.Close()
 		// defer zpack.writer.Close()
 	}

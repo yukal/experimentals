@@ -8,7 +8,25 @@ import (
 	"github.com/yukal/experimentals/godocxpacker/src/structs"
 )
 
-func GetTenants(db *sql.DB) ([]structs.OSBBTenant, error) {
+type SqliteConnection struct {
+	db *sql.DB
+}
+
+func New(sqliteFile string) (*SqliteConnection, error) {
+	db, err := sql.Open("sqlite3", sqliteFile)
+
+	if err != nil {
+		return nil, err
+	}
+
+	sqlcon := &SqliteConnection{
+		db: db,
+	}
+
+	return sqlcon, nil
+}
+
+func (sqlcon *SqliteConnection) GetTenants() ([]structs.OSBBTenant, error) {
 	tenants := []structs.OSBBTenant{}
 	query := `
     SELECT
@@ -31,7 +49,7 @@ func GetTenants(db *sql.DB) ([]structs.OSBBTenant, error) {
       tenant_appartment_voting.voting_id = ?
       AND tenant.is_active = ?`
 
-	rows, err := db.Query(query, 1, true)
+	rows, err := sqlcon.db.Query(query, 1, true)
 
 	if err != nil {
 		return tenants, err

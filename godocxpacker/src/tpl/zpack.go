@@ -56,7 +56,7 @@ func (z *ZPack) FromBuff(buff *bytes.Buffer, dstPath string) (int64, error) {
 	return bytesWritten, nil
 }
 
-func (z *ZPack) Cleanup() {
+func (z *ZPack) Close() {
 	defer z.file.Close()
 	defer z.writer.Close()
 }
