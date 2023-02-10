@@ -5,7 +5,7 @@ import (
 	"log"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/yukal/experimentals/godocxpacker/src/structs"
+	"github.com/yukal/godocxpacker/src/structs"
 )
 
 type SqliteConnection struct {
