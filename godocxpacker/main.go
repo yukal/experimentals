@@ -1,28 +1,25 @@
 package main
 
 import (
-	"database/sql"
-
-	"github.com/yukal/experimentals/godocxpacker/src/database/sqlite"
+	"github.com/yukal/experimentals/godocxpacker/src/db/sqlite"
 	"github.com/yukal/experimentals/godocxpacker/src/structs"
 	"github.com/yukal/experimentals/godocxpacker/src/tpl"
 )
 
 func main() {
-	sqliteFile := "./data/appartments.db"
-	db, err := sql.Open("sqlite3", sqliteFile)
+	db, err := sqlite.New("data/appartments.db")
 
 	if err != nil {
 		panic(err)
 	}
 
 	var tenants []structs.OSBBTenant
-	tenants, err = sqlite.GetTenants(db)
+	tenants, err = db.GetTenants()
 
 	data := &structs.DocxTemplate{
 		Docx: structs.DocxMetadata{
 			Creator:        "РЦ ОСББ",
-			LastModifiedBy: "NodeJS Builder",
+			LastModifiedBy: "Go Builder",
 			Language:       "uk-UA",
 		},
 
@@ -72,14 +69,12 @@ func main() {
 		Tenants: tenants,
 	}
 
-	cpl := tpl.New(&tpl.TmplCompilerPaths{
-		App:   "data/templates",
-		Parts: "data/templates/parts",
-		Docs:  "data/templates/docs",
-		Build: "data/build",
+	cpl := tpl.New(tpl.TmplBuilderPaths{
+		Templates: "data/templates",
+		Build:     "data/build",
 	})
 
-	if err = cpl.Compile(data); err != nil {
+	if err = cpl.Build(data); err != nil {
 		panic(err)
 	}
 }
