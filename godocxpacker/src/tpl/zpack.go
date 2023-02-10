@@ -12,7 +12,7 @@ type ZPack struct {
 	writer *zip.Writer
 }
 
-func (z *ZPack) FromPath(srcPath, dstPath string) (int64, error) {
+func (z *ZPack) addFromPath(srcPath, dstPath string) (int64, error) {
 	var bytesWritten int64
 
 	srcFile, err := os.Open(srcPath)
@@ -38,7 +38,7 @@ func (z *ZPack) FromPath(srcPath, dstPath string) (int64, error) {
 	return bytesWritten, nil
 }
 
-func (z *ZPack) FromBuff(buff *bytes.Buffer, dstPath string) (int64, error) {
+func (z *ZPack) addFromBuff(buff *bytes.Buffer, dstPath string) (int64, error) {
 	var bytesWritten int64
 
 	dstFile, err := z.writer.Create(dstPath)
