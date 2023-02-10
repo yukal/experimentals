@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/yukal/experimentals/godocxpacker/src/db/sqlite"
-	"github.com/yukal/experimentals/godocxpacker/src/structs"
-	"github.com/yukal/experimentals/godocxpacker/src/tpl"
+	"github.com/yukal/godocxpacker/src/db/sqlite"
+	"github.com/yukal/godocxpacker/src/structs"
+	"github.com/yukal/godocxpacker/src/tpl"
 )
 
 func main() {
@@ -13,8 +13,11 @@ func main() {
 		panic(err)
 	}
 
-	var tenants []structs.OSBBTenant
-	tenants, err = db.GetTenants()
+	tenants, err := db.GetTenants()
+
+	if err != nil {
+		panic(err)
+	}
 
 	data := &structs.DocxTemplate{
 		Docx: structs.DocxMetadata{
