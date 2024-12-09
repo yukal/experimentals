@@ -21,6 +21,6 @@
   },
   "homepage": "https://github.com/yukal/experimentals#readme",
   "devDependencies": {
-    "mocha": "^10.8.2"
+    "mocha": "^11.0.1"
   }
 }
